@@ -1,0 +1,14 @@
+[camera]
+# Camera IP address or hostname
+host = 192.168.1.100
+
+# ONVIF service port (usually 80, 8080, or 8000)
+port = 80
+
+# Camera credentials
+username = admin
+password = password
+
+[settings]
+# Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+log_level = INFO
