@@ -210,14 +210,26 @@ bool auth_validate_timestamp(const char* created_timestamp) {
     struct tm tm_created;
     memset(&tm_created, 0, sizeof(struct tm));
     
+    int year, month, day, hour, minute, second;
     if (sscanf(created_timestamp, "%d-%d-%dT%d:%d:%dZ",
-               &tm_created.tm_year, &tm_created.tm_mon, &tm_created.tm_mday,
-               &tm_created.tm_hour, &tm_created.tm_min, &tm_created.tm_sec) != 6) {
+               &year, &month, &day, &hour, &minute, &second) != 6) {
         return false;
     }
     
-    tm_created.tm_year -= 1900;
-    tm_created.tm_mon -= 1;
+    /* Validate date/time components */
+    if (year < 1900 || year > 3000) return false;
+    if (month < 1 || month > 12) return false;
+    if (day < 1 || day > 31) return false;
+    if (hour < 0 || hour > 23) return false;
+    if (minute < 0 || minute > 59) return false;
+    if (second < 0 || second > 59) return false;
+    
+    tm_created.tm_year = year - 1900;
+    tm_created.tm_mon = month - 1;
+    tm_created.tm_mday = day;
+    tm_created.tm_hour = hour;
+    tm_created.tm_min = minute;
+    tm_created.tm_sec = second;
     
     time_t created_time = timegm(&tm_created);
     time_t now = time(NULL);

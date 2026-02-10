@@ -203,11 +203,25 @@ int onvif_server_start(onvif_server_t* server) {
         
         /* Handle client request in a simple way for now */
         /* In production, this should be handled in a separate thread/process */
-        char buffer[4096];
+        char buffer[65536];  /* Increased to 64KB */
         ssize_t bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
         
         if (bytes_read > 0) {
             buffer[bytes_read] = '\0';
+            
+            /* Check if request was truncated */
+            if (bytes_read >= (ssize_t)(sizeof(buffer) - 1)) {
+                /* Request too large - return HTTP 413 */
+                const char* error_response = 
+                    "HTTP/1.1 413 Payload Too Large\r\n"
+                    "Content-Type: text/plain\r\n"
+                    "Connection: close\r\n"
+                    "\r\n"
+                    "Request too large";
+                send(client_fd, error_response, strlen(error_response), 0);
+                close(client_fd);
+                continue;
+            }
             
             /* Simple HTTP request parsing */
             char response[4096];

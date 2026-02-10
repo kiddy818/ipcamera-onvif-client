@@ -19,9 +19,17 @@
 static onvif_server_t test_server;
 static bool server_initialized = false;
 
+/* Find an available port for testing */
+static int find_available_port() {
+    /* Use a range of ports for testing to avoid conflicts */
+    static int test_port = 18080;
+    return test_port++;
+}
+
 /* Test helper functions */
 static void setup_test_server() {
-    onvif_server_init(&test_server, 8080);
+    int port = find_available_port();
+    onvif_server_init(&test_server, port);
     onvif_server_set_device_info(&test_server,
                                  "TestManufacturer",
                                  "TestModel",
@@ -41,16 +49,17 @@ static void teardown_test_server() {
 
 int test_server_initialization() {
     printf("\n  Scenario: Server initialization\n");
-    printf("    Given the ONVIF server is configured on port 8080\n");
+    printf("    Given the ONVIF server is configured on a test port\n");
     
     onvif_server_t server;
-    int ret = onvif_server_init(&server, 8080);
+    int port = find_available_port();
+    int ret = onvif_server_init(&server, port);
     
     printf("    When I start the ONVIF server initialization\n");
     printf("    Then the server should be initialized successfully\n");
     
     if (ret == ONVIF_SERVER_OK) {
-        printf("    ✓ PASSED\n");
+        printf("    ✓ PASSED (port: %d)\n", port);
         onvif_server_destroy(&server);
         return 0;
     }
