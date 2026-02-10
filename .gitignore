@@ -1,3 +1,22 @@
+# Build artifacts
+build/
+bin/
+lib/
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+
 # Python
 __pycache__/
 *.py[cod]
@@ -31,6 +50,15 @@ env/
 *.swp
 *.swo
 *~
+
+# Test artifacts
+Testing/
+CTestTestfile.cmake
+
+# Cucumber reports
+reports/
+*.json
+*.xml
 
 # OS
 .DS_Store
