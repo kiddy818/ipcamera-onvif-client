@@ -6,21 +6,64 @@ This script demonstrates how to use the ONVIF client to interact with an IP came
 
 import sys
 import time
+import os
+from configparser import ConfigParser
 from onvif_client import ONVIFClient, setup_logging
+
+
+def load_config():
+    """
+    Load camera configuration from config.ini file or environment variables
+    
+    Returns:
+        dict: Configuration dictionary with camera settings
+    """
+    config = {}
+    
+    # Try to load from config file first
+    config_file = 'config.ini'
+    if os.path.exists(config_file):
+        parser = ConfigParser()
+        parser.read(config_file)
+        
+        if parser.has_section('camera'):
+            config['host'] = parser.get('camera', 'host')
+            config['port'] = parser.getint('camera', 'port')
+            config['username'] = parser.get('camera', 'username')
+            config['password'] = parser.get('camera', 'password')
+            
+            if parser.has_section('settings'):
+                log_level = parser.get('settings', 'log_level', fallback='INFO')
+                config['log_level'] = log_level
+            return config
+    
+    # Fall back to environment variables
+    config['host'] = os.getenv('ONVIF_HOST', '192.168.1.100')
+    config['port'] = int(os.getenv('ONVIF_PORT', '80'))
+    config['username'] = os.getenv('ONVIF_USERNAME', 'admin')
+    config['password'] = os.getenv('ONVIF_PASSWORD', 'password')
+    config['log_level'] = os.getenv('LOG_LEVEL', 'INFO')
+    
+    return config
 
 
 def main():
     """Main example function"""
     
-    # Setup logging
-    setup_logging()
+    # Load configuration
+    config = load_config()
     
-    # Camera configuration
-    # Replace these with your camera's actual credentials
-    CAMERA_HOST = '192.168.1.100'  # Camera IP address
-    CAMERA_PORT = 80               # ONVIF service port
-    USERNAME = 'admin'             # Camera username
-    PASSWORD = 'password'          # Camera password
+    # Setup logging
+    import logging
+    log_levels = {
+        'DEBUG': logging.DEBUG,
+        'INFO': logging.INFO,
+        'WARNING': logging.WARNING,
+        'ERROR': logging.ERROR,
+        'CRITICAL': logging.CRITICAL
+    }
+    log_level = log_levels.get(config.get('log_level', 'INFO'), logging.INFO)
+    setup_logging(level=log_level)
     
     print("=" * 60)
     print("ONVIF Camera Client Example")
@@ -28,8 +71,13 @@ def main():
     print()
     
     # Create ONVIF client instance
-    print(f"Connecting to camera at {CAMERA_HOST}:{CAMERA_PORT}...")
-    client = ONVIFClient(CAMERA_HOST, CAMERA_PORT, USERNAME, PASSWORD)
+    print(f"Connecting to camera at {config['host']}:{config['port']}...")
+    client = ONVIFClient(
+        config['host'],
+        config['port'],
+        config['username'],
+        config['password']
+    )
     
     # Connect to the camera
     if not client.connect():

@@ -63,6 +63,10 @@ if client.connect():
 
 ### Running the Example
 
+The example script can read configuration from either a config file or environment variables.
+
+**Option 1: Using configuration file**
+
 1. Copy the example configuration:
 ```bash
 cp config.ini.example config.ini
@@ -72,6 +76,18 @@ cp config.ini.example config.ini
 
 3. Run the example script:
 ```bash
+python example.py
+```
+
+**Option 2: Using environment variables**
+
+```bash
+export ONVIF_HOST=192.168.1.100
+export ONVIF_PORT=80
+export ONVIF_USERNAME=admin
+export ONVIF_PASSWORD=your_password
+export LOG_LEVEL=INFO
+
 python example.py
 ```
 

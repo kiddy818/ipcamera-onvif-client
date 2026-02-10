@@ -143,7 +143,7 @@ class ONVIFClient:
             # If no profile token provided, get the first profile
             if profile_token is None:
                 profiles = self.get_profiles()
-                if not profiles or len(profiles) == 0:
+                if not profiles:
                     self.logger.error("No profiles available")
                     return None
                 profile_token = profiles[0].token
@@ -188,7 +188,7 @@ class ONVIFClient:
             # If no profile token provided, get the first profile
             if profile_token is None:
                 profiles = self.get_profiles()
-                if not profiles or len(profiles) == 0:
+                if not profiles:
                     self.logger.error("No profiles available")
                     return None
                 profile_token = profiles[0].token
@@ -232,7 +232,7 @@ class ONVIFClient:
             # If no profile token provided, get the first profile
             if profile_token is None:
                 profiles = self.get_profiles()
-                if not profiles or len(profiles) == 0:
+                if not profiles:
                     self.logger.error("No profiles available")
                     return False
                 profile_token = profiles[0].token
@@ -274,7 +274,7 @@ class ONVIFClient:
             # If no profile token provided, get the first profile
             if profile_token is None:
                 profiles = self.get_profiles()
-                if not profiles or len(profiles) == 0:
+                if not profiles:
                     self.logger.error("No profiles available")
                     return False
                 profile_token = profiles[0].token
