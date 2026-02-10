@@ -3,8 +3,9 @@
  * @brief ONVIF Profile S Server Implementation
  * 
  * This header defines the main API for the ONVIF server implementation.
- * The server uses gSOAP for SOAP message handling and follows BDD approach
- * with comprehensive feature testing.
+ * The server provides basic SOAP message handling and optionally supports
+ * gSOAP for enhanced SOAP processing when compiled with USE_GSOAP=ON.
+ * The implementation follows BDD approach with comprehensive feature testing.
  */
 
 #ifndef ONVIF_SERVER_H
@@ -37,6 +38,7 @@ extern "C" {
 #define ONVIF_MAX_PROFILES              10
 #define ONVIF_NONCE_CACHE_SIZE          100
 #define ONVIF_TIMESTAMP_TOLERANCE_SEC   300  // 5 minutes
+#define ONVIF_MAX_REQUEST_SIZE          65536 // 64KB max request size
 
 /* Forward declarations */
 struct soap;

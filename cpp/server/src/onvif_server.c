@@ -203,7 +203,7 @@ int onvif_server_start(onvif_server_t* server) {
         
         /* Handle client request in a simple way for now */
         /* In production, this should be handled in a separate thread/process */
-        char buffer[65536];  /* Increased to 64KB */
+        char buffer[ONVIF_MAX_REQUEST_SIZE];
         ssize_t bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
         
         if (bytes_read > 0) {
