@@ -1,36 +1,51 @@
-# CPP VERSION: ONVIF Profile S Client Implementation
+# ONVIF Profile S Client & Server Implementation
 
-A C/C++ implementation of ONVIF Profile S (Basic Video Device Specification) using requirements-driven development with BDD testing.
+A complete C/C++ implementation of ONVIF Profile S (Basic Video Device Specification) including both **client** and **server** components, developed using requirements-driven development with BDD testing.
 
 ## Overview
 
-This project implements the ONVIF Profile S specification for communicating with IP cameras and video devices. It provides a clean C API for:
+This project provides a complete ONVIF Profile S implementation:
 
+### Client Library (`cpp/client/`)
 - **Device Management Service**: Get device information, capabilities, and available services
 - **Media Service**: Retrieve media profiles, stream URIs, and snapshot URIs  
 - **PTZ Service**: Control Pan-Tilt-Zoom functionality (optional in Profile S)
 - **Authentication**: WS-UsernameToken security support
 - **Network Communication**: HTTP/SOAP messaging with CURL
 
+### Server Library (`cpp/server/`) **NEW!**
+- **Device Management Service**: Handle GetDeviceInformation, GetCapabilities, GetServices, GetSystemDateAndTime
+- **Media Service**: Handle GetProfiles, GetStreamUri, GetSnapshotUri, GetVideoEncoderConfiguration
+- **Authentication**: WS-UsernameToken with password digest and replay protection
+- **SOAP 1.2 Support**: Full SOAP envelope parsing and response generation
+- **gSOAP Integration**: Optional gSOAP support for enhanced SOAP processing
+
 ## Features
 
+✅ **Complete ONVIF Solution** - Both client and server implementations  
 ✅ **ONVIF Profile S Compliant** - Implements core Profile S requirements  
 ✅ **Requirements-Driven Development** - Features defined as Cucumber BDD scenarios  
 ✅ **Comprehensive Testing** - Unit tests and BDD acceptance tests  
 ✅ **Clean C API** - Simple, well-documented interface  
-✅ **Cross-Platform** - Works on Linux, macOS, and Windows
+✅ **Cross-Platform** - Works on Linux, macOS, and Windows  
+✅ **gSOAP Support** - Optional integration with gSOAP toolkit
 
 ## Requirements
 
 ### Build Dependencies
 - CMake 3.10 or higher
 - C compiler (GCC, Clang, or MSVC)
-- libcurl development package
+- libcurl development package (for client)
+- OpenSSL development package (for server authentication)
+- gSOAP toolkit (optional, for enhanced server SOAP processing)
 
 ### Ubuntu/Debian
 ```bash
 sudo apt-get update
-sudo apt-get install build-essential cmake libcurl4-openssl-dev
+sudo apt-get install build-essential cmake libcurl4-openssl-dev libssl-dev
+
+# Optional: for gSOAP support
+sudo apt-get install gsoap libgsoap-dev
 ```
 
 ### macOS
@@ -100,34 +115,136 @@ int main() {
 }
 ```
 
-### Running the Example
+### Running the Client Example
 
 ```bash
-./build/examples/onvif_example http://192.168.1.100 admin password123
+./build/client/examples/onvif_example http://192.168.1.100 admin password123
+```
+
+## Server Usage
+
+### Basic Server Example
+
+```c
+#include "onvif_server.h"
+#include <stdio.h>
+
+int main() {
+    onvif_server_t server;
+    
+    // Initialize server
+    onvif_server_init(&server, 8080);
+    
+    // Configure device info
+    onvif_server_set_device_info(&server,
+        "Example Manufacturer",
+        "IP Camera Model",
+        "1.0.0",
+        "SN12345");
+    
+    // Add authentication
+    onvif_server_set_auth_required(&server, true);
+    onvif_server_add_user(&server, "admin", "password");
+    
+    // Add media profile
+    onvif_media_profile_t profile;
+    memset(&profile, 0, sizeof(profile));
+    strcpy(profile.token, "profile_1");
+    strcpy(profile.name, "MainStream");
+    strcpy(profile.encoding, "H264");
+    profile.width = 1920;
+    profile.height = 1080;
+    profile.frame_rate_limit = 30;
+    strcpy(profile.rtsp_uri, "rtsp://192.168.1.100:554/stream1");
+    
+    onvif_server_add_profile(&server, &profile);
+    
+    // Start server (blocking)
+    printf("Starting ONVIF server on port 8080...\n");
+    onvif_server_start(&server);
+    
+    // Cleanup
+    onvif_server_destroy(&server);
+    return 0;
+}
+```
+
+### Running the Server Example
+
+```bash
+cd cpp/server/build
+./examples/onvif_server_example 8080
+```
+
+The server will start with:
+- Device Service: `http://localhost:8080/onvif/device_service`
+- Media Service: `http://localhost:8080/onvif/media_service`
+- Default credentials: admin/admin123, operator/oper123
+
+### Testing Client-Server Integration
+
+```bash
+# Terminal 1: Start server
+cd cpp/server/build
+./examples/onvif_server_example 8080
+
+# Terminal 2: Test with client
+cd cpp/client/build
+./examples/onvif_example http://localhost:8080 admin admin123
 ```
 
 ## BDD Testing
 
-The project uses Behavior-Driven Development (BDD) with Cucumber-style feature files to ensure requirements are properly validated.
+Both client and server implementations use Behavior-Driven Development (BDD) with Cucumber-style feature files to ensure requirements are properly validated.
 
-### Feature Files
+### Client Feature Files
 
-Feature files are located in `features/` and describe the expected behavior:
+Feature files for the client are located in `cpp/client/features/`:
 
 - `device_management.feature` - Device discovery and information retrieval
 - `media_service.feature` - Media profiles and streaming
 - `ptz_service.feature` - Pan-Tilt-Zoom control
 - `authentication.feature` - Security and authentication
 
+### Server Feature Files
+
+Feature files for the server are located in `cpp/server/features/`:
+
+- `server_device_management.feature` - Server-side device service handling
+- `server_media_service.feature` - Server-side media service handling
+- `server_authentication.feature` - Server authentication and security
+- `server_soap_handling.feature` - SOAP message processing
+
 ### Running BDD Tests
 
 ```bash
-cd build
-./tests/test_cucumber_runner
+# Client tests
+cd cpp/client/build
+ctest --verbose
+
+# Server tests
+cd cpp/server/build
+ctest --verbose
+```
+
+All 11 server BDD tests pass:
+```
+✓ Server initialization
+✓ Handle GetDeviceInformation
+✓ Handle GetCapabilities
+✓ Handle GetServices
+✓ Handle GetSystemDateAndTime
+✓ Handle GetProfiles
+✓ Handle GetStreamUri
+✓ Parse SOAP request
+✓ Create SOAP response
+✓ Create SOAP fault
+✓ Add user
 ```
 
 ### Sample Feature
 
+**Client Feature:**
 ```gherkin
 Feature: ONVIF Device Management Service
   As an ONVIF client
@@ -140,6 +257,21 @@ Feature: ONVIF Device Management Service
     Then I should receive manufacturer information
     And I should receive model information
     And I should receive firmware version
+```
+
+**Server Feature:**
+```gherkin
+Feature: ONVIF Server Device Management Service
+  As an ONVIF server
+  I want to handle device management requests from clients
+  So that clients can discover device information and capabilities
+
+  Scenario: Handle GetDeviceInformation request
+    Given the ONVIF server is running
+    When a client requests device information
+    Then the server should return manufacturer information
+    And the server should return model information
+    And the response should be valid SOAP format
 ```
 
 ## API Reference
@@ -186,55 +318,113 @@ int onvif_get_snapshot_uri(onvif_client_t* client, const char* profile_token,
 
 ```
 .
-├── CMakeLists.txt           # Main build configuration
-├── README.md                # This file
-├── include/                 # Public headers
-│   ├── onvif_client.h      # Main client API
-│   ├── soap_handler.h      # SOAP message handling
-│   └── http_client.h       # HTTP communication
-├── src/                     # Implementation
-│   ├── onvif_client.c      # Client initialization
-│   ├── device_service.c    # Device Management Service
-│   ├── media_service.c     # Media Service
-│   ├── ptz_service.c       # PTZ Service
-│   ├── soap_handler.c      # SOAP implementation
-│   ├── http_client.c       # HTTP/CURL wrapper
-│   └── auth.c              # Authentication
-├── tests/                   # Test suite
-│   ├── test_onvif_client.c
-│   ├── test_device_service.c
-│   ├── test_media_service.c
-│   └── cucumber_runner.c   # BDD test runner
-├── features/                # BDD feature files
-│   ├── device_management.feature
-│   ├── media_service.feature
-│   ├── ptz_service.feature
-│   └── authentication.feature
-└── examples/                # Example applications
-    └── onvif_example.c
+├── README.md                    # This file
+├── cpp/
+│   ├── client/                  # ONVIF Client Implementation
+│   │   ├── CMakeLists.txt      # Client build configuration
+│   │   ├── include/            # Public headers
+│   │   │   ├── onvif_client.h # Main client API
+│   │   │   ├── soap_handler.h # SOAP message handling
+│   │   │   └── http_client.h  # HTTP communication
+│   │   ├── src/                # Implementation
+│   │   │   ├── onvif_client.c # Client initialization
+│   │   │   ├── device_service.c # Device Management Service
+│   │   │   ├── media_service.c  # Media Service
+│   │   │   ├── ptz_service.c    # PTZ Service
+│   │   │   ├── soap_handler.c   # SOAP implementation
+│   │   │   ├── http_client.c    # HTTP/CURL wrapper
+│   │   │   └── auth.c           # Authentication
+│   │   ├── tests/              # Test suite
+│   │   │   ├── test_onvif_client.c
+│   │   │   ├── test_device_service.c
+│   │   │   ├── test_media_service.c
+│   │   │   └── cucumber_runner.c # BDD test runner
+│   │   ├── features/           # BDD feature files
+│   │   │   ├── device_management.feature
+│   │   │   ├── media_service.feature
+│   │   │   ├── ptz_service.feature
+│   │   │   └── authentication.feature
+│   │   └── examples/           # Example applications
+│   │       └── onvif_example.c
+│   │
+│   └── server/                 # ONVIF Server Implementation (NEW!)
+│       ├── CMakeLists.txt      # Server build configuration
+│       ├── README.md           # Server documentation
+│       ├── SERVER_IMPLEMENTATION_GUIDE.md # Detailed guide
+│       ├── include/            # Public headers
+│       │   ├── onvif_server.h # Main server API
+│       │   ├── device_service_handler.h
+│       │   ├── media_service_handler.h
+│       │   ├── soap_server_handler.h
+│       │   └── auth_handler.h
+│       ├── src/                # Implementation
+│       │   ├── onvif_server.c
+│       │   ├── device_service_handler.c
+│       │   ├── media_service_handler.c
+│       │   ├── soap_server_handler.c
+│       │   └── auth_handler.c
+│       ├── tests/              # BDD tests
+│       │   └── cucumber_runner.c
+│       ├── features/           # BDD feature files
+│       │   ├── server_device_management.feature
+│       │   ├── server_media_service.feature
+│       │   ├── server_authentication.feature
+│       │   └── server_soap_handling.feature
+│       └── examples/           # Example applications
+│           └── server_example.c
+│
+└── python/                     # Python ONVIF client
+    └── onvif_client.py
 ```
 
 ## ONVIF Profile S Coverage
 
-This implementation covers the following ONVIF Profile S requirements:
+### Client Implementation
 
-### Device Management Service
+The client library implements the following ONVIF Profile S operations:
+
+#### Device Management Service
 - ✅ GetDeviceInformation
 - ✅ GetCapabilities  
 - ✅ GetServices
 - ⚠️  GetSystemDateAndTime (not yet implemented)
 - ⚠️  SetSystemDateAndTime (not yet implemented)
 
-### Media Service
+#### Media Service
 - ✅ GetProfiles
 - ✅ GetStreamUri
 - ✅ GetSnapshotUri
 - ⚠️  GetVideoEncoderConfiguration (not yet implemented)
 - ⚠️  GetVideoEncoderConfigurationOptions (not yet implemented)
 
-### Security
+#### Security
 - ✅ WS-UsernameToken support via HTTP Digest/Basic auth
 - ⚠️  Full WS-Security implementation (in progress)
+
+### Server Implementation
+
+The server library implements the following ONVIF Profile S handlers:
+
+#### Device Management Service
+- ✅ GetDeviceInformation
+- ✅ GetCapabilities  
+- ✅ GetServices
+- ✅ GetSystemDateAndTime
+- ⚠️  SetSystemDateAndTime (not yet implemented)
+
+#### Media Service
+- ✅ GetProfiles
+- ✅ GetStreamUri
+- ✅ GetSnapshotUri
+- ✅ GetVideoEncoderConfiguration
+- ⚠️  SetVideoEncoderConfiguration (not yet implemented)
+
+#### Security
+- ✅ WS-UsernameToken authentication
+- ✅ Password digest (SHA-1 based)
+- ✅ Nonce-based replay attack prevention
+- ✅ Timestamp validation
+- ⚠️  Full WS-Security (in progress)
 
 ## Testing Strategy
 
