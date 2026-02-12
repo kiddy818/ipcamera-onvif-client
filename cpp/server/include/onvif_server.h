@@ -88,7 +88,7 @@ typedef struct {
  * @brief Service endpoint information
  */
 typedef struct {
-    char namespace[ONVIF_MAX_URL_LEN];
+    char namespace_uri[ONVIF_MAX_URL_LEN];
     char xaddr[ONVIF_MAX_URL_LEN];
     int version_major;
     int version_minor;
@@ -228,6 +228,15 @@ void onvif_server_destroy(onvif_server_t* server);
  * @return true if running, false otherwise
  */
 bool onvif_server_is_running(const onvif_server_t* server);
+
+/**
+ * @brief Check if the port is available for binding
+ *
+ * @param port Port number to check
+ * @param address Address to bind to (optional)
+ * @return true if available, false otherwise
+ */
+bool is_port_available(int port, const char* address);
 
 #ifdef __cplusplus
 }

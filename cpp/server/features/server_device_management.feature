@@ -14,8 +14,8 @@ Feature: ONVIF Server Device Management Service
     When a client requests device information
     Then the server should return manufacturer information
     And the server should return model information
-    And the server should return firmware version
-    And the server should return serial number
+    And the server should return firmware version information
+    And the server should return serial number information
     And the response should be valid SOAP format
 
   Scenario: Handle GetCapabilities request

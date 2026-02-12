@@ -18,6 +18,10 @@ int onvif_server_init(onvif_server_t* server, int port) {
     if (!server || port <= 0 || port > 65535) {
         return ONVIF_SERVER_ERR_INVALID_PARAM;
     }
+
+    if (is_port_available(port, NULL) != true) {
+        return ONVIF_SERVER_ERR_INVALID_PARAM;
+    }
     
     memset(server, 0, sizeof(onvif_server_t));
     
@@ -48,17 +52,17 @@ int onvif_server_init(onvif_server_t* server, int port) {
     
     snprintf(server->device_service.xaddr, sizeof(server->device_service.xaddr),
              "%s/onvif/device_service", base_url);
-    strncpy(server->device_service.namespace, 
+    strncpy(server->device_service.namespace_uri,
             "http://www.onvif.org/ver10/device/wsdl",
-            sizeof(server->device_service.namespace) - 1);
+            sizeof(server->device_service.namespace_uri) - 1);
     server->device_service.version_major = 2;
     server->device_service.version_minor = 0;
     
     snprintf(server->media_service.xaddr, sizeof(server->media_service.xaddr),
              "%s/onvif/media_service", base_url);
-    strncpy(server->media_service.namespace,
+    strncpy(server->media_service.namespace_uri,
             "http://www.onvif.org/ver10/media/wsdl",
-            sizeof(server->media_service.namespace) - 1);
+            sizeof(server->media_service.namespace_uri) - 1);
     server->media_service.version_major = 2;
     server->media_service.version_minor = 0;
     
@@ -274,4 +278,33 @@ void onvif_server_destroy(onvif_server_t* server) {
 
 bool onvif_server_is_running(const onvif_server_t* server) {
     return server && server->running;
+}
+
+bool is_port_available(int port, const char* ip) {
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0)
+    {
+        return false;
+    }
+
+    // 关键：设置SO_REUSEADDR，避免TIME_WAIT状态导致的误判
+    int opt = 1;
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    if (NULL == ip) {
+        addr.sin_addr.s_addr = INADDR_ANY;
+    }
+    else
+    {
+        inet_pton(AF_INET, ip, &addr.sin_addr);
+    }
+
+    int ret = bind(sock, (struct sockaddr*)&addr, sizeof(addr));
+    close(sock);
+
+    return ret == 0;  // bind成功 = 端口空闲
 }

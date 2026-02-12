@@ -35,8 +35,8 @@ if(USE_GSOAP)
     if(PkgConfig_FOUND)
         pkg_check_modules(GSOAP gsoap++)
         if(GSOAP_FOUND)
-            message(STATUS "Found gSOAP: ${GSOAP_VERSION}")
             include_directories(${GSOAP_INCLUDE_DIRS})
+            link_directories(${GSOAP_LIBRARY_DIRS})
             target_link_libraries(onvif_server ${GSOAP_LIBRARIES})
             target_compile_definitions(onvif_server PRIVATE USE_GSOAP)
         else()
@@ -61,6 +61,27 @@ install(TARGETS onvif_server
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
 )
+
+if(ENABLE_CUCUMBER_TEST)
+    find_package(GTest 1.11.0 REQUIRED)
+endif()
+if(TARGET GTest::gtest)
+    find_package(CucumberCpp REQUIRED)
+    function(add_cucumber_executable)
+        add_executable(FeatureShowcaseSteps ${ARGV})
+        target_include_directories(FeatureShowcaseSteps PUBLIC ${CucumberCpp_DIR}/../../include)
+        target_link_directories(FeatureShowcaseSteps PUBLIC ${CucumberCpp_DIR}/../)
+        target_link_libraries(FeatureShowcaseSteps PRIVATE onvif_server cucumber-cpp GTest::gtest)
+        foreach(_arg ${ARGN})
+            get_filename_component(OBJECT_PREFIX ${_arg} NAME_WE)
+            set_source_files_properties(${_arg} PROPERTIES COMPILE_FLAGS "-DCUKE_OBJECT_PREFIX=${OBJECT_PREFIX}")
+        endforeach(_arg)
+    endfunction()
+
+    add_cucumber_executable(
+        features/step_definitions/server_device_management.cpp
+    )
+endif()
 
 install(DIRECTORY include/
     DESTINATION include/onvif_server

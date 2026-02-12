@@ -134,11 +134,11 @@ int handle_get_services(onvif_server_t* server,
         "<tds:Minor>%d</tds:Minor>"
         "</tds:Version>"
         "</tds:Service>",
-        server->device_service.namespace,
+        server->device_service.namespace_uri,
         server->device_service.xaddr,
         server->device_service.version_major,
         server->device_service.version_minor,
-        server->media_service.namespace,
+        server->media_service.namespace_uri,
         server->media_service.xaddr,
         server->media_service.version_major,
         server->media_service.version_minor);
@@ -157,7 +157,7 @@ int handle_get_services(onvif_server_t* server,
             "<tds:Minor>%d</tds:Minor>"
             "</tds:Version>"
             "</tds:Service>",
-            server->ptz_service.namespace,
+            server->ptz_service.namespace_uri,
             server->ptz_service.xaddr,
             server->ptz_service.version_major,
             server->ptz_service.version_minor);
